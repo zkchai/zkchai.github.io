@@ -9,21 +9,21 @@ theme: jekyll-theme-chirpy
 lang: en
 
 # Change to your timezone › https://kevinnovak.github.io/Time-Zone-Picker
-timezone:
+timezone: Asia/Taipei
 
 # jekyll-seo-tag settings › https://github.com/jekyll/jekyll-seo-tag/blob/master/docs/usage.md
 # ↓ --------------------------
 
-title: Chirpy # the main title
+title: 杜水西的胡言亂語 # the main title
 
-tagline: A text-focused Jekyll theme # it will display as the subtitle
+tagline: 紀錄著我對這個世界的觀察 # it will display as the subtitle
 
 description: >- # used by seo meta and the atom feed
-  A minimal, responsive and feature-rich Jekyll theme for technical writing.
+  我的日常紀錄
 
 # Fill in the protocol & hostname for your site.
 # E.g. 'https://username.github.io', note that it does not end with a '/'.
-url: ""
+url: "https://blog.wwdu.net"
 
 github:
   username: github_username # change to your GitHub username
