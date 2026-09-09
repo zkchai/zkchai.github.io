@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英文補習班 - 學生姓名圖片測驗系統</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, "Helvetica Neue", sans-serif;
+        }
+        body {
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 700px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .mode-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: 2px solid #007bff;
+            background-color: white;
+            color: #007bff;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .mode-btn.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .quiz-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .student-img {
+            max-width: 100%;
+            max-height: 350px;
+            object-fit: contain;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .question-text {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .select-group {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .select-box {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .select-box label {
+            font-weight: bold;
+            color: #555;
+        }
+        select {
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            outline: none;
+        }
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .image-option {
+            border: 3px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: 0.2s;
+            height: 180px;
+        }
+        .image-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .image-option:hover {
+            border-color: #007bff;
+            transform: scale(1.02);
+        }
+        .btn-submit {
+            background-color: #28a745;
+            color: white;
+            padding: 12px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .btn-submit:hover {
+            background-color: #218838;
+        }
+        .result-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            display: none;
+        }
+        .result-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .result-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .wrong-correct-img {
+            max-width: 200px;
+            border-radius: 6px;
+            margin-top: 10px;
+            border: 2px solid #dc3545;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>學生姓名圖片測驗系統</h1>
+
+    <div class="mode-selector">
+        <button class="mode-btn active" onclick="switchMode(1)">模式 1：看圖猜名字</button>
+        <button class="mode-btn" onclick="switchMode(2)">模式 2：看名字選圖片</button>
+    </div>
+
+    <!-- 模式 1：顯示圖片，選英文名與中文名 -->
+    <div id="mode1-container" class="quiz-card">
+        <img id="m1-student-img" class="student-img" src="" alt="學生照片">
+        <div class="select-group">
+            <div class="select-box">
+                <label for="m1-english-select">請選擇英文名字：</label>
+                <select id="m1-english-select">
+                    <option value="">-- 請選擇英文名 --</option>
+                </select>
+            </div>
+            <div class="select-box">
+                <label for="m1-chinese-select">請選擇中文名字：</label>
+                <select id="m1-chinese-select">
+                    <option value="">-- 請選擇中文名 --</option>
+                </select>
+            </div>
+        </div>
+        <button class="btn-submit" onclick="checkMode1Answer()">提交答案</button>
+    </div>
+
+    <!-- 模式 2：顯示名字，選圖片 -->
+    <div id="mode2-container" class="quiz-card" style="display: none;">
+        <div id="m2-question-text" class="question-text"></div>
+        <div id="m2-image-grid" class="image-grid"></div>
+    </div>
+
+    <!-- 結果回饋 -->
+    <div id="result-box" class="result-message"></div>
+</div>
+
+<script>
+    // 學生資料清單（已加上性別區分以供同性別名稱篩選）
+    const students = [
+        { id: 1,  en: "Abby",     zh: "林知蓉", gender: "F", img: "Image_001.jpg" },
+        { id: 2,  en: "Aiden",    zh: "徐健祐", gender: "M", img: "Image_002.jpg" },
+        { id: 3,  en: "Anna",     zh: "胡舒晴", gender: "F", img: "Image_003.jpg" },
+        { id: 4,  en: "Anya",     zh: "簡彤恩", gender: "F", img: "Image_004.jpg" },
+        { id: 5,  en: "Brian Ke", zh: "柯定均", gender: "M", img: "Image_005.jpg" },
+        { id: 6,  en: "Dennis",   zh: "陳文捷", gender: "M", img: "Image_006.jpg" },
+        { id: 7,  en: "Doris",    zh: "莊依妶", gender: "F", img: "Image_007.jpg" },
+        { id: 8,  en: "Elwin",    zh: "黃子恩", gender: "M", img: "Image_008.jpg" },
+        { id: 9,  en: "Flora",    zh: "范可璇", gender: "F", img: "Image_009.jpg" },
+        { id: 10, en: "Gina",     zh: "沈芸嘉", gender: "F", img: "Image_010.jpg" },
+        { id: 11, en: "Jamie",    zh: "蔡於芩", gender: "F", img: "Image_011.jpg" },
+        { id: 12, en: "Jason",    zh: "林皓誠", gender: "M", img: "Image_012.jpg" },
+        { id: 13, en: "Jay",      zh: "林彥杰", gender: "M", img: "Image_013.jpg" },
+        { id: 14, en: "Leo",      zh: "劉懷澤", gender: "M", img: "Image_014.jpg" },
+        { id: 15, en: "Malisa",   zh: "謝孟潔", gender: "F", img: "Image_015.jpg" },
+        { id: 16, en: "Mita",     zh: "黃莉珉", gender: "F", img: "Image_016.jpg" },
+        { id: 17, en: "Olio",     zh: "陳宇軒", gender: "M", img: "Image_017.jpg" },
+        { id: 18, en: "Peggy Lu", zh: "盧沛璟", gender: "F", img: "Image_018.jpg" },
+        { id: 19, en: "Ryan",     zh: "闕子皓", gender: "M", img: "Image_019.jpg" },
+        { id: 20, en: "Sophia",   zh: "方子玲", gender: "F", img: "Image_020.jpg" },
+        { id: 21, en: "Steven",   zh: "莊竹霖", gender: "M", img: "Image_021.jpg" },
+        { id: 22, en: "Tony",     zh: "卓泰緯", gender: "M", img: "Image_022.jpg" },
+        { id: 23, en: "Trina",    zh: "宋亭萱", gender: "F", img: "Image_023.jpg" },
+        { id: 24, en: "Weber",    zh: "高明緯", gender: "M", img: "Image_024.jpg" },
+        { id: 25, en: "Wennie",   zh: "黃湋甯", gender: "F", img: "Image_025.jpg" },
+        { id: 26, en: "Yuna",     zh: "張家妤", gender: "F", img: "Image_026.jpg" },
+        { id: 27, en: "Zoe",      zh: "武昀柔", gender: "F", img: "Image_027.jpg" },
+        { id: 28, en: "Zola",     zh: "陳羽彤", gender: "F", img: "Image_028.jpg" }
+    ];
+
+    let currentMode = 1;
+    let currentTargetStudent = null;
+
+    // 洗牌函數
+    function shuffle(array) {
+        return array.slice().sort(() => Math.random() - 0.5);
+    }
+
+    // 模式切換
+    function switchMode(mode) {
+        currentMode = mode;
+        const btns = document.querySelectorAll('.mode-btn');
+        btns.forEach((btn, index) => {
+            btn.classList.toggle('active', index + 1 === mode);
+        });
+
+        document.getElementById('mode1-container').style.display = mode === 1 ? 'flex' : 'none';
+        document.getElementById('mode2-container').style.display = mode === 2 ? 'flex' : 'none';
+        
+        hideResult();
+        nextQuestion();
+    }
+
+    // 隨機產生下一題
+    function nextQuestion() {
+        hideResult();
+        // 隨機選一個學生作為目標
+        currentTargetStudent = students[Math.floor(Math.random() * students.length)];
+
+        if (currentMode === 1) {
+            setupMode1();
+        } else {
+            setupMode2();
+        }
+    }
+
+    // 設定模式 1（看圖猜名字）
+    function setupMode1() {
+        const imgEl = document.getElementById('m1-student-img');
+        imgEl.src = currentTargetStudent.img;
+
+        // 同性別篩選
+        const sameGenderStudents = students.filter(s => s.gender === currentTargetStudent.gender);
+
+        const enSelect = document.getElementById('m1-english-select');
+        const zhSelect = document.getElementById('m1-chinese-select');
+
+        enSelect.innerHTML = '<option value="">-- 請選擇英文名 --</option>';
+        zhSelect.innerHTML = '<option value="">-- 請選擇中文名 --</option>';
+
+        // 隨機排列同性別的選單
+        const shuffledEn = shuffle(sameGenderStudents);
+        const shuffledZh = shuffle(sameGenderStudents);
+
+        shuffledEn.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.en;
+            opt.textContent = s.en;
+            enSelect.appendChild(opt);
+        });
+
+        shuffledZh.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.zh;
+            opt.textContent = s.zh;
+            zhSelect.appendChild(opt);
+        });
+    }
+
+    // 檢查模式 1 答案
+    function checkMode1Answer() {
+        const selectedEn = document.getElementById('m1-english-select').value;
+        const selectedZh = document.getElementById('m1-chinese-select').value;
+
+        if (!selectedEn || !selectedZh) {
+            alert('請同時選擇英文名與中文名！');
+            return;
+        }
+
+        const isEnCorrect = selectedEn === currentTargetStudent.en;
+        const isZhCorrect = selectedZh === currentTargetStudent.zh;
+
+        if (isEnCorrect && isZhCorrect) {
+            showResult(true, `恭喜答對了！這位是 ${currentTargetStudent.en} (${currentTargetStudent.zh})。`);
+            setTimeout(nextQuestion, 2000);
+        } else {
+            showResult(false, `答錯了！<br>正確答案是：<b>${currentTargetStudent.en} (${currentTargetStudent.zh})</b>`);
+            setTimeout(nextQuestion, 3500);
+        }
+    }
+
+    // 設定模式 2（看名字選圖片）
+    function setupMode2() {
+        const qText = document.getElementById('m2-question-text');
+        qText.innerHTML = `請選出學生 <b>${currentTargetStudent.en} (${currentTargetStudent.zh})</b> 的照片`;
+
+        // 篩選同性別學生
+        const sameGenderStudents = students.filter(s => s.gender === currentTargetStudent.gender);
+        
+        // 取得錯誤選項 (3個同性別學生)
+        const wrongOptions = sameGenderStudents.filter(s => s.id !== currentTargetStudent.id);
+        const shuffledWrong = shuffle(wrongOptions).slice(0, 3);
+
+        // 合併正確與錯誤選項並洗牌 (共4個選項)
+        const options = shuffle([currentTargetStudent, ...shuffledWrong]);
+
+        const grid = document.getElementById('m2-image-grid');
+        grid.innerHTML = '';
+
+        options.forEach(student => {
+            const div = document.createElement('div');
+            div.className = 'image-option';
+            div.onclick = () => checkMode2Answer(student);
+
+            const img = document.createElement('img');
+            img.src = student.img;
+            img.alt = '學生圖片';
+
+            div.appendChild(img);
+            grid.appendChild(div);
+        });
+    }
+
+    // 檢查模式 2 答案
+    function checkMode2Answer(selectedStudent) {
+        if (selectedStudent.id === currentTargetStudent.id) {
+            showResult(true, `恭喜答對！這正是 ${currentTargetStudent.en} (${currentTargetStudent.zh}) 的照片。`);
+            setTimeout(nextQuestion, 2000);
+        } else {
+            showResult(false, `答錯囉！<br>正確照片是下面這張：<br>
+                <img src="${currentTargetStudent.img}" class="wrong-correct-img"><br>
+                <b>${currentTargetStudent.img} - ${currentTargetStudent.en} (${currentTargetStudent.zh})</b>`);
+            setTimeout(nextQuestion, 4000);
+        }
+    }
+
+    // 顯示結果
+    function showResult(isSuccess, htmlContent) {
+        const resBox = document.getElementById('result-box');
+        resBox.style.display = 'block';
+        resBox.className = 'result-message ' + (isSuccess ? 'success' : 'error');
+        resBox.innerHTML = htmlContent;
+    }
+
+    // 隱藏結果
+    function hideResult() {
+        const resBox = document.getElementById('result-box');
+        resBox.style.display = 'none';
+    }
+
+    // 初始化載入第一題
+    window.onload = () => {
+        nextQuestion();
+    };
+</script>
+
+</body>
+</html>
